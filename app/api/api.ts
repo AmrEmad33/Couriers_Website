@@ -1,5 +1,7 @@
+var URL = "https://vikive3096.pythonanywhere.com/";
+var localURL = "http://localhost:5000/";
 export async function GETALLORDERS(): Promise<ordersProps[]> {
-  const res = await fetch("http://localhost:5000/api/orders/getOrders");
+  const res = await fetch(URL + "api/orders/getOrders");
   const data = await res.json();
   const result = data["allOrders"] as ordersProps[];
   console.log(result);
@@ -7,7 +9,7 @@ export async function GETALLORDERS(): Promise<ordersProps[]> {
 }
 export async function GETALLCOURIERS(): Promise<usersProps[]> {
   try {
-    const res = await fetch("http://localhost:5000/api/roles/getByName", {
+    const res = await fetch(URL + "api/roles/getByName", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -27,7 +29,7 @@ export async function GETALLCOURIERS(): Promise<usersProps[]> {
     const result = data["role"] as roleProps;
     console.log(result);
 
-    const res2 = await fetch("http://localhost:5000/api/auth/getUsersByRole", {
+    const res2 = await fetch(URL + "api/auth/getUsersByRole", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -56,7 +58,7 @@ export async function DELETEORDERS(selectedItems: string[]) {
   console.log(selectedItems);
 
   try {
-    const res = await fetch("http://localhost:5000/api/orders/delete", {
+    const res = await fetch(URL + "api/orders/delete", {
       method: "DELETE",
       headers: {
         "Content-Type": "application/json",
@@ -79,7 +81,7 @@ export async function DELETEORDERS(selectedItems: string[]) {
 }
 export async function TransferOrders(allOrders: ordersProps[]) {
   try {
-    const res = await fetch("http://localhost:5000/api/orders/bulkUpdate", {
+    const res = await fetch(URL + "api/orders/bulkUpdate", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
