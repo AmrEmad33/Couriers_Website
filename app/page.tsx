@@ -1,113 +1,388 @@
-import Image from "next/image";
+"use client";
+import { useEffect, useState } from "react";
+import { Button } from "@/components/ui/button";
+import { Checkbox } from "@/components/ui/checkbox";
+import { NavigationMenuDemo } from "./components/nav";
+import {
+  Table,
+  TableBody,
+  TableCaption,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
+import {
+  ChevronLeft,
+  ChevronRight,
+  Eye,
+  MapPin,
+  Search,
+  Trash2,
+} from "lucide-react";
+import DateFilter from "./components/filter";
+import {
+  GETALLORDERS,
+  ordersProps,
+  GETALLCOURIERS,
+  usersProps,
+  DELETEORDERS,
+  TransferOrders,
+} from "./api/api";
+import DialogCloseButton from "./components/modal";
+import Link from "next/link";
+import { TransferModal } from "./components/transferModal";
+import { Progress } from "@/components/ui/progress";
+import WarningModal from "./components/modal";
+import { useRouter } from "next/navigation";
+const itemsPerPage = 10;
 
 export default function Home() {
+  const router = useRouter();
+  const [originalData, setoriginalData] = useState<ordersProps[]>([]);
+  const [courierData, setCouriersData] = useState<usersProps[]>([]);
+  const [courier, setCourier] = useState<usersProps>({} as usersProps);
+  const [filteredData, setFilteredData] = useState<ordersProps[]>([]);
+  const [selectedItems, setSelectedItems] = useState<string[]>([]);
+  const [title, setTitle] = useState<string>("Warning");
+  const [progressValue, setProgressValue] = useState<number>(13);
+  const [img, setImg] = useState<string>("non");
+  const [currentPage, setCurrentPage] = useState(1);
+  const [isWarningDialog, setWarningDialog] = useState(false);
+  const [isTransferModal, setTransferModal] = useState(false);
+  const [id, setCurrentId] = useState<string>("");
+  const [warning1, setWarning1] = useState<boolean>(false);
+  const [error, setError] = useState<boolean>(false);
+  const [searchQuery, setSearchQuery] = useState<string>(""); // Add search query state
+  const [message, setMessage] = useState<string>(
+    "Test Warning Close This window"
+  );
+
+  // Fetch orders and initialize state
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        setProgressValue(50);
+        const data = await GETALLORDERS();
+        setProgressValue(75);
+        const courier = await GETALLCOURIERS();
+        setCouriersData(courier);
+        setoriginalData(data);
+        setFilteredData(data); // Set the data to filteredData
+        setProgressValue(100);
+      } catch (error) {
+        console.error("Error fetching orders:", error);
+      }
+    };
+    fetchData();
+    // setProgressValue(0);
+  }, []); // Empty dependency array means this effect runs once on mount
+
+  useEffect(() => {
+    const lowercasedQuery = searchQuery.toLowerCase();
+    const filtered = originalData.filter(
+      (item) =>
+        item.id.toString().toLowerCase().includes(lowercasedQuery) ||
+        item.customer_name.toLowerCase().includes(lowercasedQuery)
+    );
+    setFilteredData(filtered);
+    setCurrentPage(1); // Reset to the first page when search query changes
+  }, [searchQuery, originalData]);
+
+  const totalPages = Math.ceil(filteredData.length / itemsPerPage);
+  const startIndex = (currentPage - 1) * itemsPerPage;
+  const paginatedData = filteredData.slice(
+    startIndex,
+    startIndex + itemsPerPage
+  );
+
+  const isChecked = (orderId: string) => selectedItems.includes(orderId);
+  const handleDeleteOrder = async () => {
+    setProgressValue(75);
+    await DELETEORDERS([id]);
+    setProgressValue(90);
+    setoriginalData((prevOrders) =>
+      prevOrders.filter((order) => order.id != id)
+    );
+    setFilteredData((prevOrders) =>
+      prevOrders.filter((order) => order.id != id)
+    );
+    setSelectedItems([]);
+
+    setWarningDialog(false); // Optionally close the dialog after deletion
+    setProgressValue(100);
+  };
+  const handleDeleteOrders = async () => {
+    console.log(selectedItems);
+    setProgressValue(75);
+    await DELETEORDERS(selectedItems);
+    setProgressValue(90);
+    setoriginalData((prevOrders) =>
+      prevOrders.filter((order) => !selectedItems.includes(order.id))
+    );
+    setFilteredData((prevOrders) =>
+      prevOrders.filter((order) => !selectedItems.includes(order.id))
+    );
+    setSelectedItems([]);
+    setWarningDialog(false); // Optionally close the dialog after deletion
+    setProgressValue(100);
+  };
+  const handleTransferOrders = async () => {
+    console.log(courier);
+    var orders = [] as ordersProps[];
+    for (var orderId of selectedItems) {
+      const order = originalData.find((o) => o.id === orderId);
+      if (order && courier) {
+        order.courier_id = courier.id;
+        order.courier_name = courier.name;
+        orders.push(order);
+      }
+    }
+    if (courier) {
+      setTransferModal(false);
+      setProgressValue(50);
+      await TransferOrders(orders);
+      // Update the originalData and filteredData arrays with the new courier_id
+      setSelectedItems([]);
+      setProgressValue(100);
+    } else {
+      setError(true);
+      console.log("error");
+    }
+  };
+  const handleCheckboxChange = (orderId: string) => {
+    setSelectedItems((prevSelectedItems) => {
+      const newSelectedItems = prevSelectedItems.includes(orderId)
+        ? prevSelectedItems.filter((id) => id !== orderId)
+        : [...prevSelectedItems, orderId];
+      return newSelectedItems;
+    });
+  };
+
+  const formatDate = (dateString: string): string => {
+    const date = new Date(dateString);
+    const options: Intl.DateTimeFormatOptions = {
+      year: "numeric",
+      month: "long",
+      day: "2-digit",
+    };
+    return date.toLocaleDateString("en-US", options);
+  };
+
+  const handleFilter = (date: string) => {
+    if (date) {
+      const formattedDate = formatDate(date);
+      setFilteredData(
+        originalData.filter(
+          (item) => formatDate(item.order_date) === formattedDate
+        )
+      );
+    } else {
+      setFilteredData(originalData);
+      console.log("Couldn't Filter");
+    }
+  };
+
+  const handlePageChange = (page: number) => {
+    if (page >= 1 && page <= totalPages) {
+      setCurrentPage(page);
+    }
+  };
+
+  const isDisabled = (): boolean => selectedItems.length === 0;
+
   return (
-    <main className="flex min-h-screen flex-col items-center justify-between p-24">
-      <div className="z-10 w-full max-w-5xl items-center justify-between font-mono text-sm lg:flex">
-        <p className="fixed left-0 top-0 flex w-full justify-center border-b border-gray-300 bg-gradient-to-b from-zinc-200 pb-6 pt-8 backdrop-blur-2xl dark:border-neutral-800 dark:bg-zinc-800/30 dark:from-inherit lg:static lg:w-auto  lg:rounded-xl lg:border lg:bg-gray-200 lg:p-4 lg:dark:bg-zinc-800/30">
-          Get started by editing&nbsp;
-          <code className="font-mono font-bold">app/page.tsx</code>
-        </p>
-        <div className="fixed bottom-0 left-0 flex h-48 w-full items-end justify-center bg-gradient-to-t from-white via-white dark:from-black dark:via-black lg:static lg:size-auto lg:bg-none">
-          <a
-            className="pointer-events-none flex place-items-center gap-2 p-8 lg:pointer-events-auto lg:p-0"
-            href="https://vercel.com?utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
+    <>
+      <NavigationMenuDemo />
+      <div className="w-full h-2/5 items-center grid justify-center justify-col-1 gap-10">
+        <WarningModal
+          isOpen={warning1}
+          setIsOpen={setWarning1}
+          title={title}
+          imgLink={img}
+          message={message}
+          submitFuction={handleDeleteOrder}
+        />
+        <WarningModal
+          isOpen={isWarningDialog}
+          setIsOpen={setWarningDialog}
+          title={title}
+          imgLink={img}
+          message={message}
+          submitFuction={handleDeleteOrders}
+        />
+        <TransferModal
+          isOpen={isTransferModal}
+          setIsOpen={setTransferModal}
+          title={title}
+          imgLink={img}
+          message={message}
+          comboBoxData={courierData}
+          submitFuction={handleTransferOrders}
+          setCourier={setCourier}
+          courier={courier}
+        />
+        <div className="w-full flex flex-col gap-4">
+          <div className="flex justify-between">
+            <DateFilter onFilter={handleFilter} />
+            <div className="flex justify-start gap-5">
+              <Button
+                variant={"default"}
+                onClick={() => {
+                  setTransferModal(true);
+                  setMessage("Are you sure you want to transfer these orders");
+                  setTitle("Transfer Courier");
+                  setImg("Img Link");
+                }}
+                disabled={isDisabled()}
+              >
+                Transfer Orders
+              </Button>
+              <Button
+                variant={"destructive"}
+                onClick={() => {
+                  setMessage("Are you sure you want to delete selected Items");
+                  setTitle("Warning");
+                  setImg("Img Link");
+                  setWarningDialog(true);
+                }}
+                disabled={isDisabled()}
+              >
+                Delete Selected
+              </Button>
+            </div>
+          </div>
+          <div className="flex justify-between">
+            <div className="flex justify-start">
+              <Search color="black" className="mr-2 mt-2 h-4 w-4 text-center" />
+              <input
+                type="text"
+                placeholder="Search by Order ID or Customer Name"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="text-xs  border p-2 rounded w-full"
+              />
+            </div>
+            <p className="">filter by courier</p>
+          </div>
+        </div>
+        {progressValue < 100 && (
+          <div className="w-full flex justify-center">
+            <Progress value={progressValue} />
+          </div>
+        )}
+        <Table className="border border-black-300">
+          <TableCaption>A list of your recent invoices.</TableCaption>
+          <TableHeader>
+            <TableRow>
+              <TableHead>Select</TableHead>
+              <TableHead className="w-auto text-center">Date</TableHead>
+              <TableHead className="w-auto text-center">Order ID</TableHead>
+              <TableHead className="w-auto text-center">
+                Customer Name
+              </TableHead>
+              <TableHead className="w-auto text-center">Courier Name</TableHead>
+              <TableHead className="w-auto text-center">Zone</TableHead>
+              <TableHead className="w-auto text-center">Method</TableHead>
+              <TableHead className="w-auto text-center">Status</TableHead>
+              <TableHead className="text-center">Amount</TableHead>
+              <TableHead className="text-center">Actions</TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {paginatedData.map((item) => (
+              <TableRow key={item.id.toString()}>
+                <TableCell className="font-medium text-center table-cell">
+                  <input
+                    type="checkbox"
+                    className="ml-3"
+                    id={`checkbox-${item.id}`}
+                    checked={isChecked(item.id)}
+                    onChange={() => handleCheckboxChange(item.id)}
+                  />
+                </TableCell>
+
+                <TableCell className="font-medium text-center">
+                  {item.order_date}
+                </TableCell>
+                <TableCell className="font-medium text-center">
+                  {item.id}
+                </TableCell>
+                <TableCell className="text-center">
+                  {item.customer_name}
+                </TableCell>
+                <TableCell className="text-center">
+                  {item.courier_name}
+                </TableCell>
+                <TableCell className="text-center">
+                  {item.domestic_zone}
+                </TableCell>
+                <TableCell className="text-center">
+                  {item.payment_method}
+                </TableCell>
+                <TableCell
+                  className={`text-center ${
+                    item.is_delivered === 0
+                      ? "text-yellow-600"
+                      : "text-green-500"
+                  }`}
+                >
+                  {item.is_delivered === 0 ? "Pending" : "Delivered"}
+                </TableCell>
+                <TableCell className="text-center">{item.total}</TableCell>
+                <TableCell className="text-center">
+                  <div className="flex justify-start text-center">
+                    <Button variant={"link"}>
+                      <Link
+                        href={item.mapLink}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                      >
+                        <MapPin color="blue" className="mr-2 h-4 w-4" />
+                      </Link>
+                    </Button>
+
+                    <Button
+                      variant={"link"}
+                      onClick={() => {
+                        setWarning1(true);
+                        setMessage("Are you sure you want to delete this item");
+                        setTitle("Warning");
+                        setImg("No Image");
+                        setCurrentId(item.id);
+                      }}
+                    >
+                      <Trash2 color="red" className="mr-2 h-4 w-4" />
+                    </Button>
+                    <Button variant={"link"}>
+                      <Eye className="mr-2 h-4 w-4" />
+                    </Button>
+                  </div>
+                </TableCell>
+              </TableRow>
+            ))}
+          </TableBody>
+        </Table>
+        <div className="flex justify-center mt-4">
+          <Button
+            variant={"link"}
+            onClick={() => handlePageChange(currentPage - 1)}
+            disabled={currentPage === 1}
           >
-            By{" "}
-            <Image
-              src="/vercel.svg"
-              alt="Vercel Logo"
-              className="dark:invert"
-              width={100}
-              height={24}
-              priority
-            />
-          </a>
+            <ChevronLeft />
+          </Button>
+          <span className="mx-2">
+            Page {currentPage} of {totalPages}
+          </span>
+          <Button
+            variant={"link"}
+            onClick={() => handlePageChange(currentPage + 1)}
+            disabled={currentPage === totalPages}
+          >
+            <ChevronRight />
+          </Button>
         </div>
       </div>
-
-      <div className="relative z-[-1] flex place-items-center before:absolute before:h-[300px] before:w-full before:-translate-x-1/2 before:rounded-full before:bg-gradient-radial before:from-white before:to-transparent before:blur-2xl before:content-[''] after:absolute after:-z-20 after:h-[180px] after:w-full after:translate-x-1/3 after:bg-gradient-conic after:from-sky-200 after:via-blue-200 after:blur-2xl after:content-[''] before:dark:bg-gradient-to-br before:dark:from-transparent before:dark:to-blue-700 before:dark:opacity-10 after:dark:from-sky-900 after:dark:via-[#0141ff] after:dark:opacity-40 sm:before:w-[480px] sm:after:w-[240px] before:lg:h-[360px]">
-        <Image
-          className="relative dark:drop-shadow-[0_0_0.3rem_#ffffff70] dark:invert"
-          src="/next.svg"
-          alt="Next.js Logo"
-          width={180}
-          height={37}
-          priority
-        />
-      </div>
-
-      <div className="mb-32 grid text-center lg:mb-0 lg:w-full lg:max-w-5xl lg:grid-cols-4 lg:text-left">
-        <a
-          href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-          className="group rounded-lg border border-transparent px-5 py-4 transition-colors hover:border-gray-300 hover:bg-gray-100 hover:dark:border-neutral-700 hover:dark:bg-neutral-800/30"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <h2 className="mb-3 text-2xl font-semibold">
-            Docs{" "}
-            <span className="inline-block transition-transform group-hover:translate-x-1 motion-reduce:transform-none">
-              -&gt;
-            </span>
-          </h2>
-          <p className="m-0 max-w-[30ch] text-sm opacity-50">
-            Find in-depth information about Next.js features and API.
-          </p>
-        </a>
-
-        <a
-          href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          className="group rounded-lg border border-transparent px-5 py-4 transition-colors hover:border-gray-300 hover:bg-gray-100 hover:dark:border-neutral-700 hover:dark:bg-neutral-800/30"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <h2 className="mb-3 text-2xl font-semibold">
-            Learn{" "}
-            <span className="inline-block transition-transform group-hover:translate-x-1 motion-reduce:transform-none">
-              -&gt;
-            </span>
-          </h2>
-          <p className="m-0 max-w-[30ch] text-sm opacity-50">
-            Learn about Next.js in an interactive course with&nbsp;quizzes!
-          </p>
-        </a>
-
-        <a
-          href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-          className="group rounded-lg border border-transparent px-5 py-4 transition-colors hover:border-gray-300 hover:bg-gray-100 hover:dark:border-neutral-700 hover:dark:bg-neutral-800/30"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <h2 className="mb-3 text-2xl font-semibold">
-            Templates{" "}
-            <span className="inline-block transition-transform group-hover:translate-x-1 motion-reduce:transform-none">
-              -&gt;
-            </span>
-          </h2>
-          <p className="m-0 max-w-[30ch] text-sm opacity-50">
-            Explore starter templates for Next.js.
-          </p>
-        </a>
-
-        <a
-          href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-          className="group rounded-lg border border-transparent px-5 py-4 transition-colors hover:border-gray-300 hover:bg-gray-100 hover:dark:border-neutral-700 hover:dark:bg-neutral-800/30"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <h2 className="mb-3 text-2xl font-semibold">
-            Deploy{" "}
-            <span className="inline-block transition-transform group-hover:translate-x-1 motion-reduce:transform-none">
-              -&gt;
-            </span>
-          </h2>
-          <p className="m-0 max-w-[30ch] text-balance text-sm opacity-50">
-            Instantly deploy your Next.js site to a shareable URL with Vercel.
-          </p>
-        </a>
-      </div>
-    </main>
+    </>
   );
 }
