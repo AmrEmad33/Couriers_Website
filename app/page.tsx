@@ -410,14 +410,14 @@ export default function Home() {
             ))}
             <TableRow>
               <TableCell className="text-center">Total</TableCell>
-              <TableCell className="text-center">//</TableCell>
-              <TableCell className="text-center">//</TableCell>
-              <TableCell className="text-center">//</TableCell>
-              <TableCell className="text-center">//</TableCell>
-              <TableCell className="text-center">//</TableCell>
-              <TableCell className="text-center">//</TableCell>
-              <TableCell className="text-center">//</TableCell>
-              <TableCell className="text-center">//</TableCell>
+              <TableCell className="text-center">..</TableCell>
+              <TableCell className="text-center">..</TableCell>
+              <TableCell className="text-center">..</TableCell>
+              <TableCell className="text-center">..</TableCell>
+              <TableCell className="text-center">..</TableCell>
+              <TableCell className="text-center">..</TableCell>
+              <TableCell className="text-center">..</TableCell>
+              <TableCell className="text-center">..</TableCell>
               <TableCell className="text-center">
                 {filteredData.reduce((acc, item) => acc + item.total, 0)}
               </TableCell>
