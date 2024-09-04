@@ -1,11 +1,70 @@
-var URL = "https://vikive3096.pythonanywhere.com/";
-var localURL = "http://localhost:5000/";
+import { boolean } from "zod";
+
+var deployedUrl = "https://vikive3096.pythonanywhere.com/";
+var localUrl = "http://localhost:5000/";
+var URL = deployedUrl;
+export async function UPDATEORDER(order: ordersProps): Promise<Boolean> {
+  try {
+    const res = await fetch(URL + "api/orders/updateOrder", {
+      method: "PUT",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        order: order,
+      }),
+    });
+
+    if (!res.ok) {
+      console.log(`HTTP error! Status: ${res.status}`);
+      return false;
+    }
+    const data = await res.json();
+    console.log(data);
+    return true;
+  } catch (error) {
+    console.log("Failed to fetch couriers:", error);
+    return false;
+  }
+}
+export async function GETORDERBYID(orderId: string): Promise<ordersProps> {
+  try {
+    const res = await fetch(URL + "api/orders/get/" + orderId);
+    const data = await res.json();
+    const result = data["order"] as ordersProps;
+    // console.log("data");
+    // console.log("result " + JSON.stringify(result));
+    return result;
+  } catch (error) {
+    return { id: "" } as ordersProps;
+  }
+}
 export async function GETALLORDERS(): Promise<ordersProps[]> {
   const res = await fetch(URL + "api/orders/getOrders");
   const data = await res.json();
   const result = data["allOrders"] as ordersProps[];
-  console.log(result);
+  // console.log(result);
   return result;
+}
+export async function ADDNEWORDERS(): Promise<boolean> {
+  try {
+    const res = await fetch(URL + "api/orders/addBulkOrders", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        // Add other headers if needed, like authentication headers
+      },
+      // Include a body if needed; for this example, it’s empty
+    });
+
+    if (!res.ok) {
+      throw new Error(`HTTP error! Status: ${res.status}`);
+    }
+    return true;
+  } catch (e) {
+    console.error("Failed to fetch couriers:", e);
+    return false;
+  }
 }
 export async function GETALLCOURIERS(): Promise<usersProps[]> {
   try {
@@ -27,7 +86,7 @@ export async function GETALLCOURIERS(): Promise<usersProps[]> {
 
     const data = await res.json();
     const result = data["role"] as roleProps;
-    console.log(result);
+    // console.log(result);
 
     const res2 = await fetch(URL + "api/auth/getUsersByRole", {
       method: "POST",
@@ -116,6 +175,7 @@ export interface ordersProps {
   mapLink: string;
   order_date: string;
   courier_name: string;
+  notes: string;
 }
 
 export interface roleProps {

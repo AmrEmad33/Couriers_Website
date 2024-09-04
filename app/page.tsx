@@ -35,13 +35,17 @@ import { TransferModal } from "./components/transferModal";
 import { Progress } from "@/components/ui/progress";
 import WarningModal from "./components/modal";
 import { useRouter } from "next/navigation";
+import EditDialog, { editTableProps } from "./components/editModal";
+import { Input } from "@/components/ui/input";
 const itemsPerPage = 10;
 
 export default function Home() {
   const router = useRouter();
   const [originalData, setoriginalData] = useState<ordersProps[]>([]);
+  const [filterCourier, setFilterCourier] = useState<usersProps>();
   const [courierData, setCouriersData] = useState<usersProps[]>([]);
   const [courier, setCourier] = useState<usersProps>({} as usersProps);
+  const [rowData, setRowData] = useState<editTableProps>({} as editTableProps);
   const [filteredData, setFilteredData] = useState<ordersProps[]>([]);
   const [selectedItems, setSelectedItems] = useState<string[]>([]);
   const [title, setTitle] = useState<string>("Warning");
@@ -53,7 +57,9 @@ export default function Home() {
   const [id, setCurrentId] = useState<string>("");
   const [warning1, setWarning1] = useState<boolean>(false);
   const [error, setError] = useState<boolean>(false);
+  const [edit, setEdtiModal] = useState<boolean>(false);
   const [searchQuery, setSearchQuery] = useState<string>(""); // Add search query state
+  const [total, setTotal] = useState<string>();
   const [message, setMessage] = useState<string>(
     "Test Warning Close This window"
   );
@@ -111,6 +117,18 @@ export default function Home() {
 
     setWarningDialog(false); // Optionally close the dialog after deletion
     setProgressValue(100);
+  };
+  const handleCourierChange = (event: React.ChangeEvent<HTMLSelectElement>) => {
+    if (event.target.value == "") {
+      setFilteredData(originalData);
+      return;
+    }
+    const filtered = originalData.filter(
+      (item) =>
+        item.courier_name.toString().toLowerCase() ==
+        event.target.value.toString().toLowerCase()
+    );
+    setFilteredData(filtered);
   };
   const handleDeleteOrders = async () => {
     console.log(selectedItems);
@@ -263,7 +281,19 @@ export default function Home() {
                 className="text-xs  border p-2 rounded w-full"
               />
             </div>
-            <p className="">filter by courier</p>
+            <div className="flex justify-end w-1/5">
+              <select
+                onChange={handleCourierChange}
+                className="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
+              >
+                <option value="">Filter By Courier</option>
+                {courierData.map((courier) => (
+                  <option key={courier.id} value={courier.name}>
+                    {courier.name}
+                  </option>
+                ))}
+              </select>
+            </div>
           </div>
         </div>
         {progressValue < 100 && (
@@ -283,9 +313,13 @@ export default function Home() {
               </TableHead>
               <TableHead className="w-auto text-center">Courier Name</TableHead>
               <TableHead className="w-auto text-center">Zone</TableHead>
+              <TableHead className="w-auto text-center">
+                Arabic Location
+              </TableHead>
               <TableHead className="w-auto text-center">Method</TableHead>
               <TableHead className="w-auto text-center">Status</TableHead>
               <TableHead className="text-center">Amount</TableHead>
+              <TableHead className="text-center">Delivery Fee</TableHead>
               <TableHead className="text-center">Actions</TableHead>
             </TableRow>
           </TableHeader>
@@ -318,8 +352,12 @@ export default function Home() {
                   {item.domestic_zone}
                 </TableCell>
                 <TableCell className="text-center">
+                  {item.arabic_location}
+                </TableCell>
+                <TableCell className="text-center">
                   {item.payment_method}
                 </TableCell>
+
                 <TableCell
                   className={`text-center ${
                     item.is_delivered === 0
@@ -330,6 +368,9 @@ export default function Home() {
                   {item.is_delivered === 0 ? "Pending" : "Delivered"}
                 </TableCell>
                 <TableCell className="text-center">{item.total}</TableCell>
+                <TableCell className="text-center">
+                  {item.delivery_fee}
+                </TableCell>
                 <TableCell className="text-center">
                   <div className="flex justify-start text-center">
                     <Button variant={"link"}>
@@ -354,13 +395,50 @@ export default function Home() {
                     >
                       <Trash2 color="red" className="mr-2 h-4 w-4" />
                     </Button>
-                    <Button variant={"link"}>
-                      <Eye className="mr-2 h-4 w-4" />
+                    <Button
+                      onClick={() => {
+                        setEdtiModal(true);
+                      }}
+                      variant={"link"}
+                    >
+                      <Eye
+                        onClick={() => {
+                          // var row = {
+                          //   customer_name: item.customer_name,
+                          //   courier_name: item.courier_name,
+                          //   zone: item.domestic_zone,
+                          //   arabic_location: item.arabic_location,
+                          //   method: item.payment_method,
+                          //   status: item.is_delivered,
+                          //   amount: item.total,
+                          // } as editTableProps;
+                          // setRowData(row);
+                          router.push("/details/" + item.id);
+                        }}
+                        className="mr-2 h-4 w-4"
+                      />
                     </Button>
                   </div>
                 </TableCell>
               </TableRow>
             ))}
+            <TableRow>
+              <TableCell className="text-center">Total</TableCell>
+              <TableCell className="text-center">//</TableCell>
+              <TableCell className="text-center">//</TableCell>
+              <TableCell className="text-center">//</TableCell>
+              <TableCell className="text-center">//</TableCell>
+              <TableCell className="text-center">//</TableCell>
+              <TableCell className="text-center">//</TableCell>
+              <TableCell className="text-center">//</TableCell>
+              <TableCell className="text-center">//</TableCell>
+              <TableCell className="text-center">
+                {filteredData.reduce((acc, item) => acc + item.total, 0)}
+              </TableCell>
+              <TableCell className="text-center">
+                {filteredData.reduce((acc, item) => acc + item.delivery_fee, 0)}
+              </TableCell>
+            </TableRow>
           </TableBody>
         </Table>
         <div className="flex justify-center mt-4">
