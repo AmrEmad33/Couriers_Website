@@ -58,13 +58,11 @@ export default function Home() {
   const [warning1, setWarning1] = useState<boolean>(false);
   const [error, setError] = useState<boolean>(false);
   const [edit, setEdtiModal] = useState<boolean>(false);
-  const [searchQuery, setSearchQuery] = useState<string>(""); // Add search query state
+  const [searchQuery, setSearchQuery] = useState<string>("");
   const [total, setTotal] = useState<string>();
   const [message, setMessage] = useState<string>(
     "Test Warning Close This window"
   );
-
-  // Fetch orders and initialize state
   useEffect(() => {
     const fetchData = async () => {
       try {
@@ -74,15 +72,14 @@ export default function Home() {
         const courier = await GETALLCOURIERS();
         setCouriersData(courier);
         setoriginalData(data);
-        setFilteredData(data); // Set the data to filteredData
+        setFilteredData(data);
         setProgressValue(100);
       } catch (error) {
         console.error("Error fetching orders:", error);
       }
     };
     fetchData();
-    // setProgressValue(0);
-  }, []); // Empty dependency array means this effect runs once on mount
+  }, []);
 
   useEffect(() => {
     const lowercasedQuery = searchQuery.toLowerCase();
@@ -92,7 +89,7 @@ export default function Home() {
         item.customer_name.toLowerCase().includes(lowercasedQuery)
     );
     setFilteredData(filtered);
-    setCurrentPage(1); // Reset to the first page when search query changes
+    setCurrentPage(1);
   }, [searchQuery, originalData]);
 
   const totalPages = Math.ceil(filteredData.length / itemsPerPage);
@@ -115,7 +112,7 @@ export default function Home() {
     );
     setSelectedItems([]);
 
-    setWarningDialog(false); // Optionally close the dialog after deletion
+    setWarningDialog(false);
     setProgressValue(100);
   };
   const handleCourierChange = (event: React.ChangeEvent<HTMLSelectElement>) => {
@@ -142,7 +139,7 @@ export default function Home() {
       prevOrders.filter((order) => !selectedItems.includes(order.id))
     );
     setSelectedItems([]);
-    setWarningDialog(false); // Optionally close the dialog after deletion
+    setWarningDialog(false);
     setProgressValue(100);
   };
   const handleTransferOrders = async () => {
@@ -160,7 +157,6 @@ export default function Home() {
       setTransferModal(false);
       setProgressValue(50);
       await TransferOrders(orders);
-      // Update the originalData and filteredData arrays with the new courier_id
       setSelectedItems([]);
       setProgressValue(100);
     } else {
@@ -403,16 +399,6 @@ export default function Home() {
                     >
                       <Eye
                         onClick={() => {
-                          // var row = {
-                          //   customer_name: item.customer_name,
-                          //   courier_name: item.courier_name,
-                          //   zone: item.domestic_zone,
-                          //   arabic_location: item.arabic_location,
-                          //   method: item.payment_method,
-                          //   status: item.is_delivered,
-                          //   amount: item.total,
-                          // } as editTableProps;
-                          // setRowData(row);
                           router.push("/details/" + item.id);
                         }}
                         className="mr-2 h-4 w-4"

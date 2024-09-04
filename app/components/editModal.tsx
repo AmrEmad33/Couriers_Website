@@ -59,7 +59,7 @@ const EditDialog: React.FC<EditDialogProps> = ({
         <DialogHeader>
           <DialogTitle>Edit Courier Details</DialogTitle>
           <DialogDescription>
-            Update the courier's information below.
+            Update the courier&apos;s information below.
           </DialogDescription>
         </DialogHeader>
         <div className="space-y-4">
