@@ -63,16 +63,27 @@ export default function Home() {
   const [message, setMessage] = useState<string>(
     "Test Warning Close This window"
   );
+
+  const getFormattedTodayDate = () => {
+    const today = new Date();
+    return today.toLocaleDateString("en-US", {
+      year: "numeric",
+      month: "long",
+      day: "numeric",
+    });
+  };
   useEffect(() => {
     const fetchData = async () => {
       try {
         setProgressValue(50);
         const data = await GETALLORDERS();
+        console.log("Filtered Orders");
+        console.log(filteredOrders);
         setProgressValue(75);
         const courier = await GETALLCOURIERS();
         setCouriersData(courier);
         setoriginalData(data);
-        setFilteredData(data);
+        setFilteredData(filteredOrders);
         setProgressValue(100);
       } catch (error) {
         console.error("Error fetching orders:", error);
@@ -94,7 +105,11 @@ export default function Home() {
 
   const totalPages = Math.ceil(filteredData.length / itemsPerPage);
   const startIndex = (currentPage - 1) * itemsPerPage;
-  const paginatedData = filteredData.slice(
+  const todayDate = getFormattedTodayDate();
+  const filteredOrders = originalData.filter(
+    (order) => order.order_date === todayDate
+  );
+  const paginatedData = filteredOrders.slice(
     startIndex,
     startIndex + itemsPerPage
   );
