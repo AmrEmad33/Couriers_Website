@@ -77,6 +77,10 @@ export default function Home() {
       try {
         setProgressValue(50);
         const data = await GETALLORDERS();
+        const todayDate = getFormattedTodayDate();
+        const filteredOrders = data.filter(
+          (order) => order.order_date === todayDate
+        );
         console.log("Filtered Orders");
         console.log(filteredOrders);
         setProgressValue(75);
@@ -94,6 +98,7 @@ export default function Home() {
 
   useEffect(() => {
     const lowercasedQuery = searchQuery.toLowerCase();
+
     const filtered = originalData.filter(
       (item) =>
         item.id.toString().toLowerCase().includes(lowercasedQuery) ||
@@ -101,15 +106,12 @@ export default function Home() {
     );
     setFilteredData(filtered);
     setCurrentPage(1);
-  }, [searchQuery, originalData]);
+  }, [searchQuery]);
 
   const totalPages = Math.ceil(filteredData.length / itemsPerPage);
   const startIndex = (currentPage - 1) * itemsPerPage;
-  const todayDate = getFormattedTodayDate();
-  const filteredOrders = originalData.filter(
-    (order) => order.order_date === todayDate
-  );
-  const paginatedData = filteredOrders.slice(
+
+  const paginatedData = filteredData.slice(
     startIndex,
     startIndex + itemsPerPage
   );
