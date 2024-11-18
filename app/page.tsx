@@ -98,7 +98,6 @@ export default function Home() {
 
   useEffect(() => {
     const lowercasedQuery = searchQuery.toLowerCase();
-
     const filtered = originalData.filter(
       (item) =>
         item.id.toString().toLowerCase().includes(lowercasedQuery) ||
@@ -319,21 +318,19 @@ export default function Home() {
           <TableHeader>
             <TableRow>
               <TableHead>Select</TableHead>
-              <TableHead className="w-auto text-center">Date</TableHead>
-              <TableHead className="w-auto text-center">Order ID</TableHead>
-              <TableHead className="w-auto text-center">
-                Customer Name
-              </TableHead>
-              <TableHead className="w-auto text-center">Courier Name</TableHead>
-              <TableHead className="w-auto text-center">Zone</TableHead>
-              <TableHead className="w-auto text-center">
+              <TableHead className="w-1 text-center">Date</TableHead>
+              <TableHead className="w-1 text-center">Order ID</TableHead>
+              <TableHead className="w-1 text-center">Customer Name</TableHead>
+              <TableHead className="w-1 text-center">Courier Name</TableHead>
+              <TableHead className="w-1 text-center">Zone</TableHead>
+              <TableHead className="w-25 text-center">
                 Arabic Location
               </TableHead>
-              <TableHead className="w-auto text-center">Method</TableHead>
-              <TableHead className="w-auto text-center">Status</TableHead>
-              <TableHead className="text-center">Amount</TableHead>
-              <TableHead className="text-center">Delivery Fee</TableHead>
-              <TableHead className="text-center">Actions</TableHead>
+              <TableHead className="w-1 text-center">Method</TableHead>
+              <TableHead className="w-1 text-center">Status</TableHead>
+              <TableHead className="w-1 text-center">Amount</TableHead>
+              <TableHead className="w-1 text-center">Delivery Fee</TableHead>
+              <TableHead className="w-1 text-center">Actions</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -375,17 +372,23 @@ export default function Home() {
                   className={`text-center ${
                     item.is_delivered === 0
                       ? "text-yellow-600"
-                      : "text-green-500"
+                      : item.is_delivered === 1
+                      ? "text-green-500"
+                      : "text-red-500"
                   }`}
                 >
-                  {item.is_delivered === 0 ? "Pending" : "Delivered"}
+                  {item.is_delivered === 0
+                    ? "Pending"
+                    : item.is_delivered === 1
+                    ? "Delivered"
+                    : "Cancelled"}
                 </TableCell>
                 <TableCell className="text-center">{item.total}</TableCell>
                 <TableCell className="text-center">
                   {item.delivery_fee}
                 </TableCell>
                 <TableCell className="text-center">
-                  <div className="flex justify-start text-center">
+                  <div className="flex flex-col items-start text-center space-y-1">
                     <Button variant={"link"}>
                       <Link
                         href={item.mapLink}
@@ -408,6 +411,7 @@ export default function Home() {
                     >
                       <Trash2 color="red" className="mr-2 h-4 w-4" />
                     </Button>
+
                     <Button
                       onClick={() => {
                         setEdtiModal(true);

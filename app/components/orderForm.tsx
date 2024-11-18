@@ -38,11 +38,11 @@ const formSchema = z.object({
     .string()
     .min(1, { message: "Arabic Location is required." }),
   payment_method: z.string().min(1, { message: "Payment Method is required." }),
-  is_delivered: z.number().min(0).max(1),
+  is_delivered: z.number().min(0).max(2),
   total: z.number().min(1, { message: "total must be a positive number." }),
   delivery_fee: z
     .number()
-    .min(1, { message: "total must be a positive number." }),
+    .min(0, { message: "total must be a positive number." }),
   notes: z.string(),
 });
 
@@ -340,14 +340,28 @@ export function OrderForm({ id }: orderFormProps) {
                   <FormControl>
                     <select
                       {...field}
-                      onChange={(e) =>
-                        field.onChange(e.target.value === "Delivered" ? 1 : 0)
+                      onChange={(e) => {
+                        const value = e.target.value;
+                        if (value === "Delivered") {
+                          field.onChange(1);
+                        } else if (value === "Cancelled") {
+                          field.onChange(2);
+                        } else {
+                          field.onChange(0);
+                        }
+                      }}
+                      value={
+                        field.value === 1
+                          ? "Delivered"
+                          : field.value === 2
+                          ? "Cancelled"
+                          : "Pending"
                       }
-                      value={field.value === 1 ? "Delivered" : "Pending"}
                       className="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
                     >
                       <option value="Pending">Pending</option>
                       <option value="Delivered">Delivered</option>
+                      <option value="Cancelled">Cancelled</option>
                     </select>
                   </FormControl>
                   <FormMessage />

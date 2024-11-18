@@ -1,8 +1,29 @@
-import { boolean } from "zod";
-
-var deployedUrl = "https://vikive3096.pythonanywhere.com/";
+var deployedUrl = "https://xomehim229.pythonanywhere.com/";
 var localUrl = "http://localhost:5000/";
 var URL = deployedUrl;
+export async function UPDATEORDERSTATUS(chosenDate: string): Promise<Boolean> {
+  try {
+    const res = await fetch(URL + "api/orders/updateOrdersInGoogleSheet", {
+      method: "PUT",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        date: chosenDate,
+      }),
+    });
+    if (!res.ok) {
+      console.log(`HTTP error! Status: ${res.status}`);
+      return false;
+    }
+    const data = await res.json();
+    console.log(data);
+    return true;
+  } catch (error) {
+    console.log("Failed to Update Order Status:", error);
+    return false;
+  }
+}
 export async function UPDATEORDER(order: ordersProps): Promise<Boolean> {
   try {
     const res = await fetch(URL + "api/orders/updateOrder", {
@@ -189,3 +210,12 @@ export interface usersProps {
   email: string;
   role_id: number;
 }
+export const getFormattedDate = () => {
+  const today = new Date();
+  return new Intl.DateTimeFormat("en-US", {
+    year: "numeric",
+    month: "long",
+    day: "numeric",
+    timeZone: "Africa/Cairo",
+  }).format(today);
+};
