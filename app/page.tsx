@@ -42,7 +42,8 @@ const itemsPerPage = 10;
 export default function Home() {
   const router = useRouter();
   const [originalData, setoriginalData] = useState<ordersProps[]>([]);
-  const [filterCourier, setFilterCourier] = useState<usersProps>();
+  const [filterCourier, setFilterCourier] = useState("");
+  const [date, setFilterDate] = useState("");
   const [courierData, setCouriersData] = useState<usersProps[]>([]);
   const [courier, setCourier] = useState<usersProps>({} as usersProps);
   const [rowData, setRowData] = useState<editTableProps>({} as editTableProps);
@@ -136,11 +137,34 @@ export default function Home() {
       setFilteredData(originalData);
       return;
     }
-    const filtered = originalData.filter(
-      (item) =>
-        item.courier_name.toString().toLowerCase() ==
-        event.target.value.toString().toLowerCase()
-    );
+
+    const filtered = originalData
+      .filter((item) => {
+        // Filter by courier_name and optionally by order_date
+        const matchesCourier =
+          item.courier_name.toString().toLowerCase() ===
+          event.target.value.toString().toLowerCase();
+
+        const matchesDate = date === "" || item.order_date === date;
+
+        return matchesCourier && matchesDate;
+      })
+      .sort((a, b) => {
+        // Check that order_date is valid before sorting
+        const dateA = new Date(a.order_date);
+        const dateB = new Date(b.order_date);
+
+        // If date is not provided, sort by order_date in descending order
+        if (date === "") {
+          // Ensure the dates are valid (not NaN)
+          if (isNaN(dateA.getTime()) || isNaN(dateB.getTime())) {
+            return 0; // In case of invalid dates, leave the order unchanged
+          }
+          return dateB.getTime() - dateA.getTime(); // descending (newest first)
+        }
+        return 0; // No sorting if date is provided
+      });
+    setFilterCourier(event.target.value.toString().toLowerCase());
     setFilteredData(filtered);
   };
   const handleDeleteOrders = async () => {
@@ -202,10 +226,15 @@ export default function Home() {
   const handleFilter = (date: string) => {
     if (date) {
       const formattedDate = formatDate(date);
+      setFilterDate(formattedDate);
       setFilteredData(
-        originalData.filter(
-          (item) => formatDate(item.order_date) === formattedDate
-        )
+        originalData.filter((item) => {
+          const dateMatches = formatDate(item.order_date) === formattedDate;
+          const courierMatches =
+            filterCourier !== "" ? item.courier_name === filterCourier : true;
+
+          return dateMatches && courierMatches;
+        })
       );
     } else {
       setFilteredData(originalData);
