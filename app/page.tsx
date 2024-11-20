@@ -347,19 +347,21 @@ export default function Home() {
           <TableHeader>
             <TableRow>
               <TableHead>Select</TableHead>
-              <TableHead className="w-1 text-center">Date</TableHead>
-              <TableHead className="w-1 text-center">Order ID</TableHead>
-              <TableHead className="w-1 text-center">Customer Name</TableHead>
-              <TableHead className="w-1 text-center">Courier Name</TableHead>
-              <TableHead className="w-1 text-center">Zone</TableHead>
-              <TableHead className="w-25 text-center">
+              <TableHead className="w-auto text-center">Date</TableHead>
+              <TableHead className="w-auto text-center">Order ID</TableHead>
+              <TableHead className="w-auto text-center">
+                Customer Name
+              </TableHead>
+              <TableHead className="w-auto text-center">Courier Name</TableHead>
+              <TableHead className="w-auto text-center">Zone</TableHead>
+              <TableHead className="w-auto text-center">
                 Arabic Location
               </TableHead>
-              <TableHead className="w-1 text-center">Method</TableHead>
-              <TableHead className="w-1 text-center">Status</TableHead>
-              <TableHead className="w-1 text-center">Amount</TableHead>
-              <TableHead className="w-1 text-center">Delivery Fee</TableHead>
-              <TableHead className="w-1 text-center">Actions</TableHead>
+              <TableHead className="w-auto text-center">Method</TableHead>
+              <TableHead className="w-auto text-center">Status</TableHead>
+              <TableHead className="w-auto text-center">Amount</TableHead>
+              <TableHead className="w-auto text-center">Delivery Fee</TableHead>
+              <TableHead className="w-auto text-center">Actions</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
